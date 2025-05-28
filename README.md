@@ -70,3 +70,28 @@ done < "$TMPFILE"
 
 # Cleanup
 rm "$TMPFILE"
+
+
+#!/bin/bash
+
+OUTPUT="tools.txt"
+
+echo "List of Executable Tools in \$PATH with Versions" > "$OUTPUT"
+echo "Generated on $(date)" >> "$OUTPUT"
+echo "" >> "$OUTPUT"
+
+# Scan each PATH directory
+IFS=':'
+for dir in $PATH; do
+  if [[ -d "$dir" ]]; then
+    find "$dir" -maxdepth 1 -executable -type f 2>/dev/null
+  fi
+done | sort -u | while read -r fullpath; do
+  tool=$(basename "$fullpath")
+  version=$("$tool" --version 2>/dev/null | head -n 1)
+  if [[ -z "$version" ]]; then
+    version=$("$tool" -v 2>/dev/null | head -n 1)
+  fi
+  [[ -z "$version" ]] && version="(unknown)"
+  echo "$tool : $version" >> "$OUTPUT"
+done
